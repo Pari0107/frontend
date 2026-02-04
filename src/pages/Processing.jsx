@@ -1,32 +1,114 @@
-import { useParams, useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
-import ProgressStepper from "../components/ProgressStepper"
-import { getStatus } from "../services/api"
+import React, { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 export default function Processing() {
-  const { jobId } = useParams()
-  const [step, setStep] = useState(0)
+
   const navigate = useNavigate()
 
+  const steps = [
+    "Ingesting private financial data",
+    "Scraping public business info",
+    "Detecting company sector",
+    "Extracting key metrics",
+    "Structuring slides",
+    "Generating PPT & citations"
+  ]
+
+  const [currentStep, setCurrentStep] = useState(0)
+  const [finished, setFinished] = useState(false)
+
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const res = await getStatus(jobId)
 
-      setStep(res.data.step)
+    const interval = setInterval(() => {
 
-      if (res.data.done) {
+      setCurrentStep(prev => {
+
+        if (prev < steps.length - 1) return prev + 1
+
         clearInterval(interval)
-        navigate(`/results/${jobId}`)
-      }
-    }, 1500)
+        setFinished(true)
+        return prev
+
+      })
+
+    }, 1000)
 
     return () => clearInterval(interval)
+
   }, [])
 
   return (
-    <div className="max-w-md mx-auto mt-20 bg-white shadow p-10 rounded">
-      <h3 className="font-bold text-lg mb-6">Generating Teaser...</h3>
-      <ProgressStepper current={step} />
+    <div className="processing-page">
+
+      <h2 className="processing-title">
+        Generating your investment teaser
+      </h2>
+
+      <p className="processing-subtitle">
+        Analyzing uploaded documents and enriching with public data
+      </p>
+
+      <div className="time-pill">
+        ~30 seconds remaining
+      </div>
+
+      <div className="processing-card">
+
+        {steps.map((step, index) => {
+
+          const isDone = index < currentStep
+          const isActive = index === currentStep
+
+          return (
+            <div
+              key={index}
+              className={`process-row 
+                ${isDone ? "done" : ""} 
+                ${isActive ? "active" : ""}`}
+            >
+
+              <div className="circle">
+
+                {isDone && "✓"}
+
+              </div>
+
+              <span>{step}</span>
+
+            </div>
+          )
+        })}
+
+      </div>
+
+      <div className="progress-section">
+
+        <p className="current-text">
+          {steps[currentStep]}...
+        </p>
+
+        <div className="progress-track">
+          <div
+            className="progress-bar"
+            style={{
+              width: `${((currentStep + 1) / steps.length) * 100}%`
+            }}
+          />
+        </div>
+
+      </div>
+
+      {/* ONLY ADDITION */}
+
+      {finished && (
+        <button
+          className="download-btn"
+          onClick={() => navigate("/results")}
+        >
+          Download your PPT
+        </button>
+      )}
+
     </div>
   )
 }

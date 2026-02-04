@@ -1,3 +1,4 @@
+import React from "react"
 const steps = [
   "Financial Ingestion",
   "Public Data Scraping",
